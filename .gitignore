@@ -15,6 +15,7 @@
 .svn
 build
 bin
+bin-int
 lib
 cpp
 */lib/*
