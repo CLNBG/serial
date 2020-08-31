@@ -80,10 +80,10 @@ Serial::SerialImpl::open ()
     case ERROR_FILE_NOT_FOUND:
       // Use this->getPort to convert to a std::string
       ss << "Specified port, " << this->getPort() << ", does not exist.";
-      THROW (IOException, ss.str().c_str());
+      THROW_S (IOException, ss.str().c_str());
     default:
       ss << "Unknown error opening the serial port: " << create_file_err;
-      THROW (IOException, ss.str().c_str());
+      THROW_S (IOException, ss.str().c_str());
     }
   }
 
@@ -96,7 +96,7 @@ Serial::SerialImpl::reconfigurePort ()
 {
   if (fd_ == INVALID_HANDLE_VALUE) {
     // Can only operate on a valid file descriptor
-    THROW (IOException, "Invalid file descriptor, is the serial port open?");
+    THROW_S (IOException, "Invalid file descriptor, is the serial port open?");
   }
 
   DCB dcbSerialParams = {0};
@@ -105,7 +105,7 @@ Serial::SerialImpl::reconfigurePort ()
 
   if (!GetCommState(fd_, &dcbSerialParams)) {
     //error getting state
-    THROW (IOException, "Error getting the serial port state.");
+    THROW_S (IOException, "Error getting the serial port state.");
   }
 
   // setup baud rate
@@ -259,7 +259,7 @@ Serial::SerialImpl::reconfigurePort ()
   // activate settings
   if (!SetCommState(fd_, &dcbSerialParams)){
     CloseHandle(fd_);
-    THROW (IOException, "Error setting serial port settings.");
+    THROW_S (IOException, "Error setting serial port settings.");
   }
 
   // Setup timeouts
@@ -270,7 +270,7 @@ Serial::SerialImpl::reconfigurePort ()
   timeouts.WriteTotalTimeoutConstant = timeout_.write_timeout_constant;
   timeouts.WriteTotalTimeoutMultiplier = timeout_.write_timeout_multiplier;
   if (!SetCommTimeouts(fd_, &timeouts)) {
-    THROW (IOException, "Error setting timeouts.");
+    THROW_S (IOException, "Error setting timeouts.");
   }
 }
 
@@ -284,7 +284,7 @@ Serial::SerialImpl::close ()
       if (ret == 0) {
         stringstream ss;
         ss << "Error while closing serial port: " << GetLastError();
-        THROW (IOException, ss.str().c_str());
+        THROW_S (IOException, ss.str().c_str());
       } else {
         fd_ = INVALID_HANDLE_VALUE;
       }
@@ -309,7 +309,7 @@ Serial::SerialImpl::available ()
   if (!ClearCommError(fd_, NULL, &cs)) {
     stringstream ss;
     ss << "Error while checking status of the serial port: " << GetLastError();
-    THROW (IOException, ss.str().c_str());
+    THROW_S (IOException, ss.str().c_str());
   }
   return static_cast<size_t>(cs.cbInQue);
 }
@@ -317,14 +317,14 @@ Serial::SerialImpl::available ()
 bool
 Serial::SerialImpl::waitReadable (uint32_t /*timeout*/)
 {
-  THROW (IOException, "waitReadable is not implemented on Windows.");
+  THROW_S (IOException, "waitReadable is not implemented on Windows.");
   return false;
 }
 
 void
 Serial::SerialImpl::waitByteTimes (size_t /*count*/)
 {
-  THROW (IOException, "waitByteTimes is not implemented on Windows.");
+  THROW_S (IOException, "waitByteTimes is not implemented on Windows.");
 }
 
 size_t
@@ -337,7 +337,7 @@ Serial::SerialImpl::read (uint8_t *buf, size_t size)
   if (!ReadFile(fd_, buf, static_cast<DWORD>(size), &bytes_read, NULL)) {
     stringstream ss;
     ss << "Error while reading from the serial port: " << GetLastError();
-    THROW (IOException, ss.str().c_str());
+    THROW_S (IOException, ss.str().c_str());
   }
   return (size_t) (bytes_read);
 }
@@ -352,7 +352,7 @@ Serial::SerialImpl::write (const uint8_t *data, size_t length)
   if (!WriteFile(fd_, data, static_cast<DWORD>(length), &bytes_written, NULL)) {
     stringstream ss;
     ss << "Error while writing to the serial port: " << GetLastError();
-    THROW (IOException, ss.str().c_str());
+    THROW_S (IOException, ss.str().c_str());
   }
   return (size_t) (bytes_written);
 }
@@ -489,7 +489,7 @@ Serial::SerialImpl::flushOutput ()
 void
 Serial::SerialImpl::sendBreak (int /*duration*/)
 {
-  THROW (IOException, "sendBreak is not supported on Windows.");
+  THROW_S (IOException, "sendBreak is not supported on Windows.");
 }
 
 void
@@ -561,7 +561,7 @@ Serial::SerialImpl::getCTS ()
   }
   DWORD dwModemStatus;
   if (!GetCommModemStatus(fd_, &dwModemStatus)) {
-    THROW (IOException, "Error getting the status of the CTS line.");
+    THROW_S (IOException, "Error getting the status of the CTS line.");
   }
 
   return (MS_CTS_ON & dwModemStatus) != 0;
@@ -575,7 +575,7 @@ Serial::SerialImpl::getDSR ()
   }
   DWORD dwModemStatus;
   if (!GetCommModemStatus(fd_, &dwModemStatus)) {
-    THROW (IOException, "Error getting the status of the DSR line.");
+      THROW_S(IOException, "Error getting the status of the DSR line.");
   }
 
   return (MS_DSR_ON & dwModemStatus) != 0;
@@ -589,7 +589,7 @@ Serial::SerialImpl::getRI()
   }
   DWORD dwModemStatus;
   if (!GetCommModemStatus(fd_, &dwModemStatus)) {
-    THROW (IOException, "Error getting the status of the RI line.");
+      THROW_S(IOException, "Error getting the status of the RI line.");
   }
 
   return (MS_RING_ON & dwModemStatus) != 0;
@@ -604,7 +604,7 @@ Serial::SerialImpl::getCD()
   DWORD dwModemStatus;
   if (!GetCommModemStatus(fd_, &dwModemStatus)) {
     // Error in GetCommModemStatus;
-    THROW (IOException, "Error getting the status of the CD line.");
+      THROW_S(IOException, "Error getting the status of the CD line.");
   }
 
   return (MS_RLSD_ON & dwModemStatus) != 0;
@@ -614,7 +614,7 @@ void
 Serial::SerialImpl::readLock()
 {
   if (WaitForSingleObject(read_mutex, INFINITE) != WAIT_OBJECT_0) {
-    THROW (IOException, "Error claiming read mutex.");
+      THROW_S(IOException, "Error claiming read mutex.");
   }
 }
 
@@ -622,7 +622,7 @@ void
 Serial::SerialImpl::readUnlock()
 {
   if (!ReleaseMutex(read_mutex)) {
-    THROW (IOException, "Error releasing read mutex.");
+      THROW_S(IOException, "Error releasing read mutex.");
   }
 }
 
@@ -630,7 +630,7 @@ void
 Serial::SerialImpl::writeLock()
 {
   if (WaitForSingleObject(write_mutex, INFINITE) != WAIT_OBJECT_0) {
-    THROW (IOException, "Error claiming write mutex.");
+      THROW_S(IOException, "Error claiming write mutex.");
   }
 }
 
@@ -638,7 +638,7 @@ void
 Serial::SerialImpl::writeUnlock()
 {
   if (!ReleaseMutex(write_mutex)) {
-    THROW (IOException, "Error releasing write mutex.");
+      THROW_S(IOException, "Error releasing write mutex.");
   }
 }
 
