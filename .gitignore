@@ -33,3 +33,7 @@ doc/html
 ipch
 Debug
 Release
+
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.users
