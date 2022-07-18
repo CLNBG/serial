@@ -1,4 +1,4 @@
-project "serialCom"
+project "serial"
     kind "StaticLib"
     language "C++"
 
