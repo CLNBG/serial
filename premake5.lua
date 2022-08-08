@@ -1,4 +1,5 @@
-project "serial"
+project "libSerial"
+    cppdialect "C++17"
     kind "StaticLib"
     language "C++"
 
@@ -29,7 +30,6 @@ project "serial"
     
     filter "system:windows"
         systemversion "latest"
-        cppdialect "C++17"
         staticruntime "Off"
 
 
