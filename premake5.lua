@@ -30,15 +30,13 @@ project "libSerial"
     
     filter "system:windows"
         systemversion "latest"
-        staticruntime "Off"
-
 
     filter "configurations:Debug"
-        systemversion "latest"
+        staticruntime "off"
         runtime "Debug"
         symbols "on"
 
     filter "configurations:Release"
-        systemversion "latest"
         runtime "Release"
         optimize "on"
+        staticruntime "On"
